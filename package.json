@@ -2,20 +2,25 @@
   "name": "siuu",
   "type": "module",
   "version": "0.0.0",
-  "description": "A starter for creating a TypeScript package.",
+  "description": "A CLI that compresses images (PNG / JPEG / WebP) with WebAssembly codecs.",
   "author": "Author Name <author.name@mail.com>",
   "license": "MIT",
-  "homepage": "https://github.com/author/library#readme",
+  "engines": {
+    "node": ">=20"
+  },
+  "homepage": "https://github.com/WBBB0730/siuu#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/author/library.git"
-  },
-  "bugs": {
-    "url": "https://github.com/author/library/issues"
+    "url": "https://github.com/WBBB0730/siuu.git"
   },
   "exports": {
     ".": "./dist/index.mjs",
+    "./cli": "./dist/cli.mjs",
+    "./worker": "./dist/worker.mjs",
     "./package.json": "./package.json"
+  },
+  "bin": {
+    "siuu": "./dist/cli.mjs"
   },
   "files": [
     "dist"
@@ -37,5 +42,12 @@
     "tsx": "^4.22.3",
     "typescript": "^6.0.3",
     "vitest": "^4.1.5"
+  },
+  "dependencies": {
+    "@jsquash/jpeg": "^1.6.0",
+    "@jsquash/oxipng": "^2.3.0",
+    "@jsquash/png": "^3.1.1",
+    "@jsquash/webp": "^1.5.0",
+    "imagequant": "^0.1.2"
   }
 }

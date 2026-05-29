@@ -1,23 +1,38 @@
-# tsdown-starter
+# Siuu
 
-A starter for creating a TypeScript package.
+Compress images (PNG / JPEG / WebP) with WebAssembly codecs (imagequant + oxipng, mozjpeg, libwebp).
 
-## Development
-
-- Install dependencies:
+## Usage
 
 ```bash
-npm install
+npx siuu <files or directories...> [options]
 ```
 
-- Run the unit tests:
+Options:
+
+- `-o, --out <filename>` — output filename for the input right before it (repeatable)
+- `-d, --out-dir <dir>` — output directory (default: `siuu-output/` in the current directory)
+- `-f, --format <format>` — output format: `png` / `jpeg` / `webp` (default: same as input)
+- `-h, --help` — show help
+- `-v, --version` — show version
+
+Inputs without an explicit `-o` are written to the output directory under their original name; existing files are never overwritten (falls back to `name (n)`). With `-f`, every output is converted to that format; `-o` only sets the filename, not the format.
+
+## Examples
 
 ```bash
-npm run test
-```
+# Compress one or more files (default: ./siuu-output/, original names)
+npx siuu a.png b.jpg c.webp
 
-- Build the library:
+# Recursively compress all images in a directory
+npx siuu photos/
 
-```bash
-npm run build
+# Convert everything to WebP
+npx siuu photos/ -f webp
+
+# Per-file output names (-o binds to the input before it)
+npx siuu a.png -o x.png b.png -o y.png
+
+# Custom output directory
+npx siuu imgs/ -d dist/
 ```
