@@ -20,8 +20,8 @@ Pass any mix of image files and directories. Directories are scanned recursively
 | Option | Description |
 | --- | --- |
 | `-o, --out <filename>` | Output filename for the input immediately before it (repeatable). |
-| `-d, --out-dir <dir>` | Output directory (default: `siuuu-output/` in the current directory). |
-| `-f, --format <png\|jpeg\|webp>` | Convert every output to this format (default: keep each input's format). `jpg` is treated as `jpeg`. |
+| `-d, --out-dir <dir>` | Output directory (default: `siuuu/` in the current directory). |
+| `-f, --format <png\|jpeg\|webp>` | Output format; default keeps each input's format. `jpg` is treated as `jpeg`. Repeatable — pass several times to emit each input in multiple formats at once. |
 | `-h, --help` | Show help. |
 | `-v, --version` | Show version. |
 
@@ -29,14 +29,14 @@ Pass any mix of image files and directories. Directories are scanned recursively
 
 - Inputs without their own `-o` are written into the output directory under their original name.
 - Existing files are never overwritten — siuuu falls back to `name (n).ext`.
-- `-f` changes the format of every output; `-o` only sets the filename, not the format.
+- `-f` is repeatable; with multiple `-f` each input is emitted once per format. When `-f` is given, `-o` provides the base name and the extension follows the format (e.g. `-o pic -f png -f webp` → `pic.png` + `pic.webp`).
 - `-o` binds to the single input file right before it and cannot be applied to a directory input.
 - Compression is fixed-quality: PNG high (quantize to ≤200 colors + oxipng), JPEG medium (mozjpeg 75), WebP high (libwebp 90).
 
 ## Examples
 
 ```bash
-# Compress files into ./siuuu-output/ keeping original names
+# Compress files into ./siuuu/ keeping original names
 npx siuuu a.png b.jpg c.webp
 
 # Recursively compress every image in a directory
@@ -44,6 +44,9 @@ npx siuuu photos/
 
 # Convert everything to WebP
 npx siuuu photos/ -f webp
+
+# Emit each input in several formats at once
+npx siuuu a.png -f png -f webp
 
 # Per-file output names (-o binds to the preceding input)
 npx siuuu a.png -o x.png b.png -o y.png

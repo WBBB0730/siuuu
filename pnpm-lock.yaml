@@ -20,9 +20,15 @@ importers:
       '@jsquash/webp':
         specifier: ^1.5.0
         version: 1.5.0
+      i18next:
+        specifier: ^26.3.0
+        version: 26.3.0(typescript@6.0.3)
       imagequant:
         specifier: ^0.1.2
         version: 0.1.2
+      picocolors:
+        specifier: ^1.1.1
+        version: 1.1.1
     devDependencies:
       '@types/node':
         specifier: ^25.6.2
@@ -662,6 +668,14 @@ packages:
 
   hookable@6.1.1:
     resolution: {integrity: sha512-U9LYDy1CwhMCnprUfeAZWZGByVbhd54hwepegYTK7Pi5NvqEj63ifz5z+xukznehT7i6NIZRu89Ay1AZmRsLEQ==}
+
+  i18next@26.3.0:
+    resolution: {integrity: sha512-gHSgGpUXVmuqE2El1W61DmxeyeTlFfZgdJRWMo9jScAn5pu7TuTuiccb1zh3E2J9hEBVGJ23+96x0ieBhfuIHA==}
+    peerDependencies:
+      typescript: ^5 || ^6
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   imagequant@0.1.2:
     resolution: {integrity: sha512-7Q3B6vcDJEc+DKcfKises04XymMwP6mlfv2ShXQd/OaJaV1mum7mYueLEeaxRxwCjjn+M9pugnct9vne7r2A8A==}
@@ -1457,6 +1471,10 @@ snapshots:
       resolve-pkg-maps: 1.0.0
 
   hookable@6.1.1: {}
+
+  i18next@26.3.0(typescript@6.0.3):
+    optionalDependencies:
+      typescript: 6.0.3
 
   imagequant@0.1.2: {}
 

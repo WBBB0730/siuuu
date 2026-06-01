@@ -1,41 +1,23 @@
 #!/usr/bin/env node
 import { createRequire } from 'node:module'
-import { basename, extname, join, resolve } from 'node:path'
+import { basename, dirname, extname, join, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 
+import pc from 'picocolors'
+
 import { exists, formatSize, isDirectory, isInside, listImages, OUTPUT_EXTENSION, runBatch } from './batch'
+import { t } from './i18n'
 
 import type { ImageFormat } from './types'
 
 const require = createRequire(import.meta.url)
 const pkg = require('../package.json') as { name: string, version: string }
 
-const DEFAULT_OUT_DIR = 'siuuu-output'
+const DEFAULT_OUT_DIR = 'siuuu'
 
-const HELP = `${pkg.name} v${pkg.version} — 压缩 PNG / JPEG / WebP 图片
-
-用法:
-  npx ${pkg.name} <文件或目录...> [选项]
-
-选项:
-  -o, --out <文件名>     为紧邻的前一个输入单独指定输出文件名（可多次）
-  -d, --out-dir <目录>   全局输出目录（默认：当前目录下的 ${DEFAULT_OUT_DIR}/）
-  -f, --format <格式>    输出格式 png | jpeg | webp（默认与输入一致，不做转换）
-  -h, --help             显示帮助
-  -v, --version          显示版本
-
-说明:
-  传入目录时会递归压缩其中所有 PNG / JPEG / WebP，多文件时自动用多线程并行。
-  未用 -o 单独命名的，按原文件名输出到输出目录；同名不覆盖，自动改用「名称 (n)」。
-  指定 -f 后所有输出都转为该格式；-o 只决定文件名，不影响格式。
-  压缩参数：PNG 高画质（量化 ≤200 色 + oxipng）、JPEG 中画质（mozjpeg 75）、WebP 高画质（libwebp 90）。
-
-示例:
-  npx ${pkg.name} a.png b.jpg                  # 压缩到 ${DEFAULT_OUT_DIR}/a.png、${DEFAULT_OUT_DIR}/b.jpg
-  npx ${pkg.name} photos/ -f webp              # 递归压缩 photos/ 并全部转 webp
-  npx ${pkg.name} a.png -o x.png b.png -o y.png # 分别指定输出文件名
-  npx ${pkg.name} imgs/ -d dist/               # 输出到 dist/
-`
+function help(): string {
+  return t('help', { name: pkg.name, version: pkg.version, dir: DEFAULT_OUT_DIR })
+}
 
 function parseFormat(value: string): ImageFormat | undefined {
   const v = value.toLowerCase()
@@ -44,6 +26,11 @@ function parseFormat(value: string): ImageFormat | undefined {
   if (v === 'jpg')
     return 'jpeg'
   return undefined
+}
+
+// 把路径的扩展名替换成 ext（保留目录与文件名主体）。
+function withExt(p: string, ext: string): string {
+  return join(dirname(p), `${basename(p, extname(p))}.${ext}`)
 }
 
 // 在输出目录里为 filename 找一个不冲突的路径，已占用则改用「名称 (n)」。
@@ -76,15 +63,15 @@ async function main(): Promise<void> {
       options: {
         'out': { type: 'string', short: 'o', multiple: true },
         'out-dir': { type: 'string', short: 'd' },
-        'format': { type: 'string', short: 'f' },
+        'format': { type: 'string', short: 'f', multiple: true },
         'help': { type: 'boolean', short: 'h' },
         'version': { type: 'boolean', short: 'v' },
       },
     })
   }
   catch (error) {
-    console.error(`参数错误：${(error as Error).message}\n`)
-    process.stdout.write(HELP)
+    console.error(`${t('argError', { message: (error as Error).message })}\n`)
+    process.stdout.write(`${help()}\n`)
     process.exitCode = 1
     return
   }
@@ -95,20 +82,23 @@ async function main(): Promise<void> {
     return
   }
   if (values.help || positionals.length === 0) {
-    process.stdout.write(HELP)
+    process.stdout.write(`${help()}\n`)
     if (positionals.length === 0 && !values.help)
       process.exitCode = 1
     return
   }
 
-  let format: ImageFormat | undefined
-  if (values.format !== undefined) {
-    format = parseFormat(values.format)
-    if (!format) {
-      console.error(`错误：不支持的格式「${values.format}」，可选 png / jpeg / webp`)
+  // -f 可多次：解析、校验、去重；为空表示保持每个输入的原格式。
+  const formats: ImageFormat[] = []
+  for (const raw of values.format ?? []) {
+    const f = parseFormat(raw)
+    if (!f) {
+      console.error(t('unsupportedFormat', { format: raw }))
       process.exitCode = 1
       return
     }
+    if (!formats.includes(f))
+      formats.push(f)
   }
 
   const outDir = values['out-dir'] ?? DEFAULT_OUT_DIR
@@ -122,7 +112,7 @@ async function main(): Promise<void> {
     else if (token.kind === 'option' && token.name === 'out') {
       const last = specs[specs.length - 1]
       if (!last) {
-        console.error('错误：-o 必须跟在某个输入文件之后')
+        console.error(t('outMustFollowInput'))
         process.exitCode = 1
         return
       }
@@ -130,48 +120,85 @@ async function main(): Promise<void> {
     }
   }
 
-  // 把文件 / 目录参数展开成任务列表；目录递归且跳过输出目录自身。
+  // 把文件 / 目录参数展开成任务列表；指定多个 -f 时，每个输入按每种格式各生成一个任务。
   const jobs: CliJob[] = []
+  const pushJobs = (source: string, output?: string): void => {
+    if (formats.length === 0)
+      jobs.push({ source, output })
+    else
+      for (const f of formats) jobs.push({ source, format: f, output })
+  }
   for (const spec of specs) {
     if (await isDirectory(spec.input)) {
       if (spec.output !== undefined) {
-        console.error(`错误：目录输入 ${spec.input} 不能用 -o 指定单个输出文件名`)
+        console.error(t('dirNoOut', { input: spec.input }))
         process.exitCode = 1
         return
       }
       for (const file of await listImages(spec.input)) {
         if (!isInside(file, resolve(outDir)))
-          jobs.push({ source: file, format })
+          pushJobs(file)
       }
     }
     else {
-      jobs.push({ source: spec.input, format, output: spec.output })
+      pushJobs(spec.input, spec.output)
     }
   }
 
   if (jobs.length === 0) {
-    console.error('没有找到可压缩的图片')
+    console.error(t('noImages'))
     process.exitCode = 1
     return
   }
 
+  // 美化输出：开头一行标题，逐个文件流式打印（文件映射在前），结尾汇总。
+  process.stdout.write(`\n${pc.bold(pkg.name)} ${pc.dim(`v${pkg.version}`)}\n\n`)
+
   const used = new Set<string>()
-  let failed = 0
+  // 文件映射列对齐宽度：按各输入名估一个稳定列宽，过长的名字自然溢出。
+  const mapWidth = Math.min(60, Math.max(20, jobs.reduce((m, j) => Math.max(m, j.source.length), 0) + 16))
+  let okCount = 0
+  let failCount = 0
+  let totalBefore = 0
+  let totalAfter = 0
+
   await runBatch(jobs, {
     // -o 指定的文件名按原样使用；否则按原名 + 目标格式扩展名输出到 outDir，并避免覆盖。
-    resolveOutPath: (job, fmt) => job.output
-      ?? uniqueOutPath(outDir, `${basename(job.source, extname(job.source))}.${OUTPUT_EXTENSION[fmt]}`, used),
+    // 指定了 -f（job.format 有值）时，-o 文件名改用该格式的扩展名；否则 -o 原样使用，无 -o 则按原名输出到 outDir 并去重。
+    resolveOutPath: (job, fmt) => {
+      if (job.output !== undefined)
+        return job.format !== undefined ? withExt(job.output, OUTPUT_EXTENSION[fmt]) : job.output
+      return uniqueOutPath(outDir, `${basename(job.source, extname(job.source))}.${OUTPUT_EXTENSION[fmt]}`, used)
+    },
     onWritten: (job, { before, after, outPath }) => {
+      okCount++
+      totalBefore += before
+      totalAfter += after
       const ratio = before > 0 ? Math.round((1 - after / before) * 100) : 0
-      console.log(`${job.source}  ${formatSize(before)} → ${formatSize(after)}  (-${ratio}%)  → ${outPath}`)
+      const mapping = `${job.source} → ${outPath}`
+      const pad = ' '.repeat(Math.max(2, mapWidth - mapping.length))
+      const sizes = `${formatSize(before)} ${pc.dim('→')} ${formatSize(after)}`
+      const ratioText = ratio >= 0 ? pc.green(`-${ratio}%`) : pc.yellow(`+${-ratio}%`)
+      console.log(`  ${pc.green('✓')} ${job.source} ${pc.dim('→')} ${pc.cyan(outPath)}${pad}${sizes}   ${ratioText}`)
     },
     onFailed: (job, message) => {
-      failed++
-      console.error(`${job.source}  失败：${message}`)
+      failCount++
+      console.error(`  ${pc.red('✗')} ${job.source}   ${pc.red(message)}`)
     },
   })
 
-  if (failed > 0)
+  const percent = totalBefore > 0 ? Math.round((1 - totalAfter / totalBefore) * 100) : 0
+  const summary = t('summary', {
+    files: jobs.length,
+    ok: pc.green(String(okCount)),
+    failed: failCount > 0 ? pc.red(String(failCount)) : '0',
+    percent,
+    before: formatSize(totalBefore),
+    after: formatSize(totalAfter),
+  })
+  console.log(`\n  ${summary}`)
+
+  if (failCount > 0)
     process.exitCode = 1
 }
 

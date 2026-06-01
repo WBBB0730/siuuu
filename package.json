@@ -29,7 +29,7 @@
     "build": "tsdown",
     "dev": "tsdown --watch",
     "test": "vitest",
-    "play": "tsx scripts/play.ts",
+    "play": "tsdown && tsx scripts/play.ts",
     "typecheck": "tsc --noEmit",
     "release": "bumpp",
     "prepublishOnly": "pnpm run build"
@@ -48,6 +48,8 @@
     "@jsquash/oxipng": "^2.3.0",
     "@jsquash/png": "^3.1.1",
     "@jsquash/webp": "^1.5.0",
-    "imagequant": "^0.1.2"
+    "i18next": "^26.3.0",
+    "imagequant": "^0.1.2",
+    "picocolors": "^1.1.1"
   }
 }

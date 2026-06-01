@@ -4,6 +4,7 @@ import { dirname, extname, isAbsolute, join, relative, resolve } from 'node:path
 import { Worker } from 'node:worker_threads'
 
 import { compress } from './index'
+import { t } from './i18n'
 
 import type { ImageFormat } from './types'
 
@@ -116,7 +117,7 @@ function compressOnWorker(worker: Worker, task: WorkerTask): Promise<WorkerResul
     }
     const onMessage = (msg: WorkerResult): void => { cleanup(); resolve(msg) }
     const onError = (error: Error): void => { cleanup(); reject(error) }
-    const onExit = (code: number): void => { cleanup(); reject(new Error(`worker 异常退出（code ${code}）`)) }
+    const onExit = (code: number): void => { cleanup(); reject(new Error(t('workerExit', { code }))) }
     worker.on('message', onMessage)
     worker.on('error', onError)
     worker.on('exit', onExit)
@@ -209,7 +210,7 @@ export async function runBatch<J extends BatchJob>(jobs: J[], handlers: BatchHan
     await writes.catch(() => {})
     const leftover = jobs.length - done.size
     if (leftover > 0)
-      console.warn(`并行压缩不可用，已回退主线程串行处理 ${leftover} 张`)
+      console.warn(t('parallelFallback', { count: leftover }))
   }
   await runOnMain()
 }

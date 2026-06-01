@@ -13,17 +13,17 @@ npx siuuu <files or directories...> [options]
 Options:
 
 - `-o, --out <filename>` — output filename for the input right before it (repeatable)
-- `-d, --out-dir <dir>` — output directory (default: `siuuu-output/` in the current directory)
-- `-f, --format <format>` — output format: `png` / `jpeg` / `webp` (default: same as input)
+- `-d, --out-dir <dir>` — output directory (default: `siuuu/` in the current directory)
+- `-f, --format <format>` — output format: `png` / `jpeg` / `webp`; repeatable to emit several at once (default: same as input)
 - `-h, --help` — show help
 - `-v, --version` — show version
 
-Inputs without an explicit `-o` are written to the output directory under their original name; existing files are never overwritten (falls back to `name (n)`). With `-f`, every output is converted to that format; `-o` only sets the filename, not the format.
+Inputs without an explicit `-o` are written to the output directory under their original name; existing files are never overwritten (falls back to `name (n)`). `-f` is repeatable — pass it several times to emit each input in multiple formats at once. When `-f` is given, `-o` provides the base name and the extension follows the format (e.g. `-o pic -f png -f webp` → `pic.png` + `pic.webp`).
 
 ## Examples
 
 ```bash
-# Compress one or more files (default: ./siuuu-output/, original names)
+# Compress one or more files (default: ./siuuu/, original names)
 npx siuuu a.png b.jpg c.webp
 
 # Recursively compress all images in a directory
@@ -31,6 +31,9 @@ npx siuuu photos/
 
 # Convert everything to WebP
 npx siuuu photos/ -f webp
+
+# Emit each input in several formats at once
+npx siuuu a.png -f png -f webp
 
 # Per-file output names (-o binds to the input before it)
 npx siuuu a.png -o x.png b.png -o y.png

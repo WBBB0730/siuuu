@@ -1,4 +1,5 @@
 import { decode, encode, PRESETS } from './codecs'
+import { t } from './i18n'
 
 import type { ImageFormat, RawImage } from './types'
 
@@ -36,7 +37,7 @@ export function detectFormat(data: Uint8Array): ImageFormat | undefined {
 export async function compress(input: Uint8Array, options: CompressOptions = {}): Promise<CompressResult> {
   const inputFormat = detectFormat(input)
   if (!inputFormat) {
-    throw new Error('无法识别的图片格式，第一版仅支持 PNG / JPEG / WebP')
+    throw new Error(t('unrecognizedFormat'))
   }
   const format = options.format ?? inputFormat
   const image: RawImage = await decode(input, inputFormat)
