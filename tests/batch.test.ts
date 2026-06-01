@@ -29,7 +29,7 @@ describe('runBatch', () => {
   let broken: string
 
   beforeAll(async () => {
-    dir = await mkdtemp(join(tmpdir(), 'siuu-batch-'))
+    dir = await mkdtemp(join(tmpdir(), 'siuuu-batch-'))
     png = join(dir, 'a.png')
     jpeg = join(dir, 'b.jpg')
     webp = join(dir, 'c.webp')

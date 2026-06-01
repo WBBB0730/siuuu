@@ -1,17 +1,17 @@
-# Siuu
+# Siuuu
 
 Compress images (PNG / JPEG / WebP) with WebAssembly codecs (imagequant + oxipng, mozjpeg, libwebp).
 
 ## Usage
 
 ```bash
-npx siuu <files or directories...> [options]
+npx siuuu <files or directories...> [options]
 ```
 
 Options:
 
 - `-o, --out <filename>` — output filename for the input right before it (repeatable)
-- `-d, --out-dir <dir>` — output directory (default: `siuu-output/` in the current directory)
+- `-d, --out-dir <dir>` — output directory (default: `siuuu-output/` in the current directory)
 - `-f, --format <format>` — output format: `png` / `jpeg` / `webp` (default: same as input)
 - `-h, --help` — show help
 - `-v, --version` — show version
@@ -21,18 +21,18 @@ Inputs without an explicit `-o` are written to the output directory under their 
 ## Examples
 
 ```bash
-# Compress one or more files (default: ./siuu-output/, original names)
-npx siuu a.png b.jpg c.webp
+# Compress one or more files (default: ./siuuu-output/, original names)
+npx siuuu a.png b.jpg c.webp
 
 # Recursively compress all images in a directory
-npx siuu photos/
+npx siuuu photos/
 
 # Convert everything to WebP
-npx siuu photos/ -f webp
+npx siuuu photos/ -f webp
 
 # Per-file output names (-o binds to the input before it)
-npx siuu a.png -o x.png b.png -o y.png
+npx siuuu a.png -o x.png b.png -o y.png
 
 # Custom output directory
-npx siuu imgs/ -d dist/
+npx siuuu imgs/ -d dist/
 ```

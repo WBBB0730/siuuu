@@ -1,5 +1,5 @@
 {
-  "name": "siuu",
+  "name": "siuuu",
   "type": "module",
   "version": "0.0.0",
   "description": "A CLI that compresses images (PNG / JPEG / WebP) with WebAssembly codecs.",
@@ -20,7 +20,7 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "siuu": "./dist/cli.mjs"
+    "siuuu": "./dist/cli.mjs"
   },
   "files": [
     "dist"

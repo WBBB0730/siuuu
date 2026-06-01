@@ -10,7 +10,7 @@ import type { ImageFormat } from './types'
 const require = createRequire(import.meta.url)
 const pkg = require('../package.json') as { name: string, version: string }
 
-const DEFAULT_OUT_DIR = 'siuu-output'
+const DEFAULT_OUT_DIR = 'siuuu-output'
 
 const HELP = `${pkg.name} v${pkg.version} — 压缩 PNG / JPEG / WebP 图片
 
