@@ -1,5 +1,7 @@
 # Siuuu
 
+[![npm version](https://img.shields.io/npm/v/siuuu.svg)](https://www.npmjs.com/package/siuuu)
+
 Compress images (PNG / JPEG / WebP) with WebAssembly codecs (imagequant + oxipng, mozjpeg, libwebp).
 
 ## Usage

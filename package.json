@@ -8,10 +8,10 @@
   "engines": {
     "node": ">=20"
   },
-  "homepage": "https://github.com/WBBB0730/siuu#readme",
+  "homepage": "https://github.com/WBBB0730/siuuu#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/WBBB0730/siuu.git"
+    "url": "https://github.com/WBBB0730/siuuu.git"
   },
   "exports": {
     ".": "./dist/index.mjs",
