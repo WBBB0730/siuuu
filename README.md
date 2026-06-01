@@ -38,3 +38,17 @@ npx siuuu a.png -o x.png b.png -o y.png
 # Custom output directory
 npx siuuu imgs/ -d dist/
 ```
+
+## Skill
+
+This repo ships an [agent skill](https://skills.sh) that teaches AI coding agents (Claude Code, Cursor, Codex, …) how to drive the `siuuu` CLI. Install it with [`npx skills`](https://github.com/vercel-labs/skills):
+
+```bash
+# Install into the current project
+npx skills add WBBB0730/siuuu
+
+# Or install globally (available across all projects)
+npx skills add WBBB0730/siuuu --global
+```
+
+Preview the skills in this repo first with `npx skills add WBBB0730/siuuu --list`.
