@@ -1,7 +1,7 @@
 {
   "name": "siuuu",
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A CLI that compresses images (PNG / JPEG / WebP) with WebAssembly codecs.",
   "author": "Author Name <author.name@mail.com>",
   "license": "MIT",
