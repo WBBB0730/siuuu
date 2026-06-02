@@ -180,10 +180,10 @@ async function main(): Promise<void> {
 
   await runBatch(jobs, {
     // -o 指定的文件名按原样使用；否则按原名 + 目标格式扩展名输出到 outDir，并避免覆盖。
-    // 指定了 -f（job.format 有值）时，-o 文件名改用该格式的扩展名；否则 -o 原样使用，无 -o 则按原名输出到 outDir 并去重。
+    // -o 是输出目录内的文件名（指定 -f 时其扩展名跟随格式）；无 -o 则按原名输出到 outDir 并去重。
     resolveOutPath: (job, fmt) => {
       if (job.output !== undefined)
-        return job.format !== undefined ? withExt(job.output, OUTPUT_EXTENSION[fmt]) : job.output
+        return join(outDir, job.format !== undefined ? withExt(job.output, OUTPUT_EXTENSION[fmt]) : job.output)
       return uniqueOutPath(outDir, `${basename(job.source, extname(job.source))}.${OUTPUT_EXTENSION[fmt]}`, used)
     },
     onWritten: (job, { before, after, outPath }) => {

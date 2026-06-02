@@ -18,40 +18,44 @@ Options:
 - `-h, --help` — show help
 - `-v, --version` — show version
 
-Inputs without an explicit `-o` are written to the output directory under their original name; existing files are never overwritten (falls back to `name (n)`). `-f` is repeatable — pass it several times to emit each input in multiple formats at once. When `-f` is given, `-o` provides the base name and the extension follows the format (e.g. `-o pic -f png -f webp` → `pic.png` + `pic.webp`).
+Outputs go to the output directory — `siuuu/` by default, or `-d <dir>` (use `-d .` for the current directory). Without `-o`, each file keeps its original name there and existing files are never overwritten (falls back to `name (n)`); `-o` sets the name within that directory. `-f` is repeatable — pass it several times to emit each input in multiple formats at once; when `-f` is given, `-o` provides the base name and the extension follows each format (e.g. `-o pic -f png -f webp` → `siuuu/pic.png` + `siuuu/pic.webp`).
 
 ## Examples
 
 ```bash
-# Compress one or more files (default: ./siuuu/, original names)
+# Keep each input's original format (default output dir: siuuu/)
 npx siuuu a.png b.jpg c.webp
+# → siuuu/a.png, siuuu/b.jpg, siuuu/c.webp
 
-# Recursively compress all images in a directory
+# Recursively compress a directory (names are flattened into the output dir)
 npx siuuu photos/
+# → siuuu/<each image>, same format as the source
 
 # Convert everything to WebP
 npx siuuu photos/ -f webp
+# → siuuu/<each image>.webp
 
 # Emit each input in several formats at once
 npx siuuu a.png -f png -f webp
+# → siuuu/a.png, siuuu/a.webp
 
-# Per-file output names (-o binds to the input before it)
+# With -f, -o sets the base name and the extension follows each format
+npx siuuu a.png -o pic -f png -f webp
+# → siuuu/pic.png, siuuu/pic.webp
+
+# Per-file output names (-o is a name inside the output dir)
 npx siuuu a.png -o x.png b.png -o y.png
+# → siuuu/x.png, siuuu/y.png
 
 # Custom output directory
 npx siuuu imgs/ -d dist/
+# → dist/<each image>, same format as the source
 ```
 
 ## Skill
 
-This repo ships an [agent skill](https://skills.sh) that teaches AI coding agents (Claude Code, Cursor, Codex, …) how to drive the `siuuu` CLI. Install it with [`npx skills`](https://github.com/vercel-labs/skills):
+Teach your AI agent to use the `siuuu` CLI — install the bundled [skill](https://skills.sh) with [`npx skills`](https://github.com/vercel-labs/skills):
 
 ```bash
-# Install into the current project
 npx skills add WBBB0730/siuuu
-
-# Or install globally (available across all projects)
-npx skills add WBBB0730/siuuu --global
 ```
-
-Preview the skills in this repo first with `npx skills add WBBB0730/siuuu --list`.
