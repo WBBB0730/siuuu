@@ -48,30 +48,13 @@ export function isInside(file: string, dir: string): boolean {
   return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel))
 }
 
-// 递归列出目录下所有图片。
-export async function listImages(dir: string): Promise<string[]> {
-  const names = await readdir(dir, { recursive: true })
+// 列出目录下的图片；recursive 为 true 时递归子目录，否则只扫顶层。
+export async function listImages(dir: string, recursive = false): Promise<string[]> {
+  const names = await readdir(dir, { recursive })
   return names
     .filter(name => isImage(name))
     .map(name => join(dir, name))
     .sort()
-}
-
-// 把文件 / 目录参数展开成图片文件列表，跳过位于 excludeDir 内的文件。
-export async function expandInputs(inputs: string[], excludeDir?: string): Promise<string[]> {
-  const files: string[] = []
-  for (const input of inputs) {
-    if (await isDirectory(input)) {
-      for (const file of await listImages(input)) {
-        if (!excludeDir || !isInside(file, excludeDir))
-          files.push(file)
-      }
-    }
-    else {
-      files.push(input)
-    }
-  }
-  return files
 }
 
 interface WorkerResult {

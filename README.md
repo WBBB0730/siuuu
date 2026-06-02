@@ -13,48 +13,36 @@ npx siuuu <files or directories...> [options]
 Options:
 
 - `-o, --out <filename>` — output filename for the input right before it (repeatable)
-- `-d, --out-dir <dir>` — output directory (default: `siuuu/` in the current directory)
+- `-d, --out-dir <dir>` — output directory (default: `siuuu/`; use `.` for the current directory)
 - `-f, --format <format>` — output format: `png` / `jpeg` / `webp`; repeatable to emit several at once (default: same as input)
+- `-r, --recursive` — recurse into subdirectories for directory inputs
 - `-h, --help` — show help
 - `-v, --version` — show version
 
-Outputs go to the output directory — `siuuu/` by default, or `-d <dir>` (use `-d .` for the current directory). Without `-o`, each file keeps its original name there and existing files are never overwritten (falls back to `name (n)`); `-o` sets the name within that directory. `-f` is repeatable — pass it several times to emit each input in multiple formats at once; when `-f` is given, `-o` provides the base name and the extension follows each format (e.g. `-o pic -f png -f webp` → `siuuu/pic.png` + `siuuu/pic.webp`).
+Same-name outputs are never overwritten — they fall back to `name (n)`.
 
 ## Examples
 
 ```bash
 # Keep each input's original format (default output dir: siuuu/)
-npx siuuu a.png b.jpg c.webp
-# → siuuu/a.png, siuuu/b.jpg, siuuu/c.webp
+npx siuuu a.png b.jpg c.webp  # → siuuu/a.png, siuuu/b.jpg, siuuu/c.webp
 
-# Recursively compress a directory (names are flattened into the output dir)
-npx siuuu photos/
-# → siuuu/<each image>, same format as the source
+# Compress a folder, recursing into subfolders (omit -r for top level only)
+npx siuuu photos/ -r  # → siuuu/<each image>, names flattened, original format
 
-# Convert everything to WebP
-npx siuuu photos/ -f webp
-# → siuuu/<each image>.webp
+# Convert a directory to WebP and write it to a custom dir
+npx siuuu photos/ -f webp -d dist/  # → dist/<each image>.webp
 
-# Emit each input in several formats at once
-npx siuuu a.png -f png -f webp
-# → siuuu/a.png, siuuu/a.webp
-
-# With -f, -o sets the base name and the extension follows each format
-npx siuuu a.png -o pic -f png -f webp
-# → siuuu/pic.png, siuuu/pic.webp
+# Emit several formats at once (with -o, the extension follows each -f)
+npx siuuu a.png -o pic -f png -f webp  # → siuuu/pic.png, siuuu/pic.webp
 
 # Per-file output names (-o is a name inside the output dir)
-npx siuuu a.png -o x.png b.png -o y.png
-# → siuuu/x.png, siuuu/y.png
-
-# Custom output directory
-npx siuuu imgs/ -d dist/
-# → dist/<each image>, same format as the source
+npx siuuu a.png -o x.png b.png -o y.png  # → siuuu/x.png, siuuu/y.png
 ```
 
 ## Skill
 
-Teach your AI agent to use the `siuuu` CLI — install the bundled [skill](https://skills.sh) with [`npx skills`](https://github.com/vercel-labs/skills):
+Install the agent [skill](https://skills.sh) for the `siuuu` CLI:
 
 ```bash
 npx skills add WBBB0730/siuuu

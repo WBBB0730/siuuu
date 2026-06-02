@@ -13,7 +13,7 @@ Compress and convert PNG / JPEG / WebP images from the command line using WebAss
 npx siuuu <files or directories...> [options]
 ```
 
-Pass any mix of image files and directories. Directories are scanned recursively for PNG / JPEG / WebP; multiple inputs are processed in parallel.
+Pass any mix of image files and directories. Directories are scanned at the top level for PNG / JPEG / WebP (pass `-r` to recurse into subdirectories); multiple inputs are processed in parallel.
 
 ## Options
 
@@ -22,6 +22,7 @@ Pass any mix of image files and directories. Directories are scanned recursively
 | `-o, --out <filename>` | Output filename for the input immediately before it (repeatable). |
 | `-d, --out-dir <dir>` | Output directory (default: `siuuu/` in the current directory). |
 | `-f, --format <png\|jpeg\|webp>` | Output format; default keeps each input's format. `jpg` is treated as `jpeg`. Repeatable — pass several times to emit each input in multiple formats at once. |
+| `-r, --recursive` | Recurse into subdirectories for directory inputs (default: top level only). |
 | `-h, --help` | Show help. |
 | `-v, --version` | Show version. |
 
@@ -37,30 +38,17 @@ Pass any mix of image files and directories. Directories are scanned recursively
 
 ```bash
 # Keep each input's original format (default output dir: siuuu/)
-npx siuuu a.png b.jpg c.webp
-# → siuuu/a.png, siuuu/b.jpg, siuuu/c.webp
+npx siuuu a.png b.jpg c.webp  # → siuuu/a.png, siuuu/b.jpg, siuuu/c.webp
 
-# Recursively compress a directory (names are flattened into the output dir)
-npx siuuu photos/
-# → siuuu/<each image>, same format as the source
+# Compress a folder, recursing into subfolders (omit -r for top level only)
+npx siuuu photos/ -r  # → siuuu/<each image>, names flattened, original format
 
-# Convert everything to WebP
-npx siuuu photos/ -f webp
-# → siuuu/<each image>.webp
+# Convert a directory to WebP and write it to a custom dir
+npx siuuu photos/ -f webp -d dist/  # → dist/<each image>.webp
 
-# Emit each input in several formats at once
-npx siuuu a.png -f png -f webp
-# → siuuu/a.png, siuuu/a.webp
-
-# With -f, -o sets the base name and the extension follows each format
-npx siuuu a.png -o pic -f png -f webp
-# → siuuu/pic.png, siuuu/pic.webp
+# Emit several formats at once (with -o, the extension follows each -f)
+npx siuuu a.png -o pic -f png -f webp  # → siuuu/pic.png, siuuu/pic.webp
 
 # Per-file output names (-o is a name inside the output dir)
-npx siuuu a.png -o x.png b.png -o y.png
-# → siuuu/x.png, siuuu/y.png
-
-# Custom output directory
-npx siuuu imgs/ -d dist/
-# → dist/<each image>, same format as the source
+npx siuuu a.png -o x.png b.png -o y.png  # → siuuu/x.png, siuuu/y.png
 ```

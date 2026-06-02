@@ -61,11 +61,12 @@ Options:
   -o, --out <filename>   output filename for the input right before it (repeatable)
   -d, --out-dir <dir>    output directory (default: {{dir}}/ in the current directory)
   -f, --format <format>  output format: png | jpeg | webp; repeatable to emit several at once (default: same as input)
+  -r, --recursive        recurse into subdirectories for directory inputs
   -h, --help             show help
   -v, --version          show version
 
 Details:
-  Directories are compressed recursively (all PNG / JPEG / WebP); multiple files run in parallel.
+  Directory inputs are scanned at the top level for PNG / JPEG / WebP; pass -r to recurse. Multiple files run in parallel.
   Inputs without -o keep their original name in the output directory; existing files are never overwritten (falls back to "name (n)").
   With -f every output is converted to that format; -o only sets the filename, not the format.
   Compression: PNG high (quantize ≤200 colors + oxipng), JPEG medium (mozjpeg 75), WebP high (libwebp 90).
@@ -97,11 +98,12 @@ const zh: typeof en = {
   -o, --out <文件名>     为紧邻的前一个输入单独指定输出文件名（可多次）
   -d, --out-dir <目录>   全局输出目录（默认：当前目录下的 {{dir}}/）
   -f, --format <格式>    输出格式 png | jpeg | webp，可重复指定一次导出多种（默认与输入一致）
+  -r, --recursive        目录输入时递归子目录
   -h, --help             显示帮助
   -v, --version          显示版本
 
 说明:
-  传入目录时会递归压缩其中所有 PNG / JPEG / WebP，多文件时自动用多线程并行。
+  传入目录时只压缩顶层的 PNG / JPEG / WebP，加 -r 才递归子目录；多文件时自动多线程并行。
   未用 -o 单独命名的，按原文件名输出到输出目录；同名不覆盖，自动改用「名称 (n)」。
   指定 -f 后所有输出都转为该格式；-o 只决定文件名，不影响格式。
   压缩参数：PNG 高画质（量化 ≤200 色 + oxipng）、JPEG 中画质（mozjpeg 75）、WebP 高画质（libwebp 90）。

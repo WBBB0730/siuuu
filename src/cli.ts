@@ -80,6 +80,7 @@ async function main(): Promise<void> {
         'out': { type: 'string', short: 'o', multiple: true },
         'out-dir': { type: 'string', short: 'd' },
         'format': { type: 'string', short: 'f', multiple: true },
+        'recursive': { type: 'boolean', short: 'r' },
         'help': { type: 'boolean', short: 'h' },
         'version': { type: 'boolean', short: 'v' },
       },
@@ -151,7 +152,7 @@ async function main(): Promise<void> {
         process.exitCode = 1
         return
       }
-      for (const file of await listImages(spec.input)) {
+      for (const file of await listImages(spec.input, values.recursive ?? false)) {
         if (!isInside(file, resolve(outDir)))
           pushJobs(file)
       }
