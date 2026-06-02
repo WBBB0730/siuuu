@@ -33,6 +33,22 @@ function withExt(p: string, ext: string): string {
   return join(dirname(p), `${basename(p, extname(p))}.${ext}`)
 }
 
+// 展示用文件名：去掉路径只留文件名；过长时在主体中间用 … 省略，保留后缀。
+const NAME_MAX = 32
+function displayName(p: string): string {
+  const name = basename(p)
+  if (name.length <= NAME_MAX)
+    return name
+  const ext = extname(name)
+  const stem = basename(name, ext)
+  const budget = NAME_MAX - ext.length - 1 // 为省略号 … 留一位
+  if (budget < 4)
+    return `${name.slice(0, NAME_MAX - 1)}…`
+  const head = Math.ceil(budget / 2)
+  const tail = budget - head
+  return `${stem.slice(0, head)}…${stem.slice(stem.length - tail)}${ext}`
+}
+
 // 在输出目录里为 filename 找一个不冲突的路径，已占用则改用「名称 (n)」。
 async function uniqueOutPath(dir: string, filename: string, used: Set<string>): Promise<string> {
   const ext = extname(filename)
@@ -155,8 +171,8 @@ async function main(): Promise<void> {
   process.stdout.write(`\n${pc.bold(pkg.name)} ${pc.dim(`v${pkg.version}`)}\n\n`)
 
   const used = new Set<string>()
-  // 文件映射列对齐宽度：按各输入名估一个稳定列宽，过长的名字自然溢出。
-  const mapWidth = Math.min(60, Math.max(20, jobs.reduce((m, j) => Math.max(m, j.source.length), 0) + 16))
+  // 文件名列对齐宽度：按各输入的展示名（截断后）取最大值。
+  const nameWidth = jobs.reduce((m, j) => Math.max(m, displayName(j.source).length), 0)
   let okCount = 0
   let failCount = 0
   let totalBefore = 0
@@ -175,15 +191,19 @@ async function main(): Promise<void> {
       totalBefore += before
       totalAfter += after
       const ratio = before > 0 ? Math.round((1 - after / before) * 100) : 0
-      const mapping = `${job.source} → ${outPath}`
-      const pad = ' '.repeat(Math.max(2, mapWidth - mapping.length))
+      const src = displayName(job.source)
+      const out = displayName(outPath)
+      const srcPad = ' '.repeat(Math.max(0, nameWidth - src.length))
+      const outPad = ' '.repeat(Math.max(0, nameWidth - out.length))
       const sizes = `${formatSize(before)} ${pc.dim('→')} ${formatSize(after)}`
       const ratioText = ratio >= 0 ? pc.green(`-${ratio}%`) : pc.yellow(`+${-ratio}%`)
-      console.log(`  ${pc.green('✓')} ${job.source} ${pc.dim('→')} ${pc.cyan(outPath)}${pad}${sizes}   ${ratioText}`)
+      console.log(`  ${pc.green('✓')} ${src}${srcPad} ${pc.dim('→')} ${pc.cyan(out)}${outPad}  ${sizes}   ${ratioText}`)
     },
     onFailed: (job, message) => {
       failCount++
-      console.error(`  ${pc.red('✗')} ${job.source}   ${pc.red(message)}`)
+      const src = displayName(job.source)
+      const srcPad = ' '.repeat(Math.max(0, nameWidth - src.length))
+      console.error(`  ${pc.red('✗')} ${src}${srcPad}   ${pc.red(message)}`)
     },
   })
 
