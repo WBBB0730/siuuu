@@ -1,14 +1,16 @@
-import { decode, encode, PRESETS } from './codecs'
+import { decode, DEFAULT_QUALITY, encode } from './codecs'
 import { t } from './i18n'
 
 import type { ImageFormat, RawImage } from './types'
 
 export type { ImageFormat, RawImage }
-export { PRESETS }
+export { DEFAULT_QUALITY }
 
 export interface CompressOptions {
   /** 输出格式，默认与输入一致（第一版不做格式转换）。 */
   format?: ImageFormat
+  /** 画质 0–100，省略时按格式回退到 DEFAULT_QUALITY。 */
+  quality?: number
 }
 
 export interface CompressResult {
@@ -41,6 +43,6 @@ export async function compress(input: Uint8Array, options: CompressOptions = {})
   }
   const format = options.format ?? inputFormat
   const image: RawImage = await decode(input, inputFormat)
-  const data = await encode(image, format)
+  const data = await encode(image, format, options.quality)
   return { data, format }
 }

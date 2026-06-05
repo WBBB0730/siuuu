@@ -1,38 +1,34 @@
 ---
 name: siuuu
-description: Use the `siuuu` command-line tool to compress and convert PNG / JPEG / WebP images via WebAssembly codecs (imagequant + oxipng, mozjpeg, libwebp). Use this skill whenever the user wants to compress, shrink, optimize, or batch-convert image files from the terminal — e.g. "compress these PNGs", "make this image smaller", "convert a folder of images to WebP", or any request to reduce image file size or change an image's format on disk.
+description: Use the `siuuu` CLI to compress and convert PNG / JPEG / WebP images. Use this skill whenever the user wants to compress, shrink, optimize, or batch-convert image files from the terminal — e.g. "compress these PNGs", "make this image smaller", "convert a folder of images to WebP", or any request to reduce image file size or change an image's format on disk.
 ---
 
 # siuuu
 
-Compress and convert PNG / JPEG / WebP images from the command line using WebAssembly codecs. No install step needed — run it with `npx`. Requires Node.js >= 20.
+A CLI to compress and convert PNG / JPEG / WebP images. Requires Node.js >= 20.
 
-## Run
+## Features
+
+- High-quality compression that keeps files small
+- No install needed — can run straight from `npx`
+- Compress or convert between PNG / JPEG / WebP
+- Parallel batch processing, at adjustable quality
+
+## Usage
 
 ```bash
 npx siuuu <files or directories...> [options]
 ```
 
-Pass any mix of image files and directories. Directories are scanned at the top level for PNG / JPEG / WebP (pass `-r` to recurse into subdirectories); multiple inputs are processed in parallel.
-
 ## Options
 
-| Option | Description |
-| --- | --- |
-| `-o, --out <filename>` | Output filename for the input immediately before it (repeatable). |
-| `-d, --out-dir <dir>` | Output directory (default: `siuuu/` in the current directory). |
-| `-f, --format <png\|jpeg\|webp>` | Output format; default keeps each input's format. `jpg` is treated as `jpeg`. Repeatable — pass several times to emit each input in multiple formats at once. |
-| `-r, --recursive` | Recurse into subdirectories for directory inputs (default: top level only). |
-| `-h, --help` | Show help. |
-| `-v, --version` | Show version. |
-
-## Behavior
-
-- Outputs go to the output directory — `siuuu/` by default, or `-d <dir>` (use `-d .` for the current directory). Without `-o`, each input keeps its original name there; `-o` only sets the name within that directory.
-- Existing files are never overwritten — siuuu falls back to `name (n).ext`.
-- `-f` is repeatable; with multiple `-f` each input is emitted once per format. When `-f` is given, `-o` provides the base name and the extension follows the format (e.g. `-o pic -f png -f webp` → `siuuu/pic.png` + `siuuu/pic.webp`).
-- `-o` binds to the single input file right before it and cannot be applied to a directory input.
-- Compression is fixed-quality: PNG high (quantize to ≤200 colors + oxipng), JPEG medium (mozjpeg 75), WebP high (libwebp 90).
+- `-o, --out <filename>` — output filename for the input right before it (repeatable)
+- `-d, --out-dir <dir>` — output directory (default: `siuuu/`; use `.` for the current directory)
+- `-f, --format <format>` — output format: `png` / `jpeg` (`jpg`) / `webp`; repeatable to emit several at once (default: same as input)
+- `-q, --quality <0-100>` — output quality for every format (default: PNG 85, JPEG 75, WebP 90)
+- `-r, --recursive` — recurse into subdirectories for directory inputs
+- `-h, --help` — show help
+- `-v, --version` — show version
 
 ## Examples
 
@@ -49,6 +45,14 @@ npx siuuu photos/ -f webp -d dist/  # → dist/<each image>.webp
 # Emit several formats at once (with -o, the extension follows each -f)
 npx siuuu a.png -o pic -f png -f webp  # → siuuu/pic.png, siuuu/pic.webp
 
+# Set output quality (0–100, applies to every format)
+npx siuuu a.png -q 60  # → siuuu/a.png at quality 60
+
 # Per-file output names (-o is a name inside the output dir)
 npx siuuu a.png -o x.png b.png -o y.png  # → siuuu/x.png, siuuu/y.png
 ```
+
+## Behavior
+
+- Directories are scanned at the top level only; pass `-r` to recurse.
+- With `-f`, `-o` sets only the base name — the extension follows the format.

@@ -78,6 +78,8 @@ export interface BatchHandlers<J extends BatchJob> {
   onWritten?: (job: J, info: { before: number, after: number, outPath: string }) => void
   onFailed?: (job: J, message: string) => void
   concurrency?: number
+  // 画质 0–100，统一作用于本批所有任务；省略时各格式按默认回退。
+  quality?: number
 }
 
 // 同一份逻辑下，dist 用 ./worker.mjs，tsx 跑源码时用 ./worker.ts。
@@ -87,6 +89,7 @@ interface WorkerTask {
   id: number
   source: string
   format?: ImageFormat
+  quality?: number
 }
 
 // 把 worker 的一次「请求 — 应答」包装成 Promise：正常应答即 resolve；
@@ -155,7 +158,7 @@ export async function runBatch<J extends BatchJob>(jobs: J[], handlers: BatchHan
         }
       }
       try {
-        const result = await compressOnWorker(worker, { id, source: jobs[id].source, format: jobs[id].format })
+        const result = await compressOnWorker(worker, { id, source: jobs[id].source, format: jobs[id].format, quality: handlers.quality })
         proven = true
         await write(id, () => result.ok
           ? persist(id, result.format!, new Uint8Array(result.data!), result.before!)
@@ -180,7 +183,7 @@ export async function runBatch<J extends BatchJob>(jobs: J[], handlers: BatchHan
         continue
       await write(id, async () => {
         const data = await readFile(jobs[id].source)
-        const result = await compress(new Uint8Array(data), { format: jobs[id].format })
+        const result = await compress(new Uint8Array(data), { format: jobs[id].format, quality: handlers.quality })
         await persist(id, result.format, result.data, data.length)
       })
     }

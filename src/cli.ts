@@ -80,6 +80,7 @@ async function main(): Promise<void> {
         'out': { type: 'string', short: 'o', multiple: true },
         'out-dir': { type: 'string', short: 'd' },
         'format': { type: 'string', short: 'f', multiple: true },
+        'quality': { type: 'string', short: 'q' },
         'recursive': { type: 'boolean', short: 'r' },
         'help': { type: 'boolean', short: 'h' },
         'version': { type: 'boolean', short: 'v' },
@@ -116,6 +117,18 @@ async function main(): Promise<void> {
     }
     if (!formats.includes(f))
       formats.push(f)
+  }
+
+  // -q：画质 0–100，统一作用于所有格式；接受小数但四舍五入并约束到区间，仅非数字才报错。
+  let quality: number | undefined
+  if (values.quality !== undefined) {
+    const n = Number(values.quality)
+    if (!Number.isFinite(n)) {
+      console.error(t('invalidQuality', { value: values.quality }))
+      process.exitCode = 1
+      return
+    }
+    quality = Math.min(100, Math.max(0, Math.round(n)))
   }
 
   const outDir = values['out-dir'] ?? DEFAULT_OUT_DIR
@@ -180,6 +193,7 @@ async function main(): Promise<void> {
   let totalAfter = 0
 
   await runBatch(jobs, {
+    quality,
     // -o 指定的文件名按原样使用；否则按原名 + 目标格式扩展名输出到 outDir，并避免覆盖。
     // -o 是输出目录内的文件名（指定 -f 时其扩展名跟随格式）；无 -o 则按原名输出到 outDir 并去重。
     resolveOutPath: (job, fmt) => {

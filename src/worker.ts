@@ -9,6 +9,7 @@ interface Task {
   id: number
   source: string
   format?: ImageFormat
+  quality?: number
 }
 
 const port = parentPort
@@ -19,7 +20,7 @@ if (!port)
 port.on('message', async (task: Task) => {
   try {
     const data = await readFile(task.source)
-    const result = await compress(new Uint8Array(data), { format: task.format })
+    const result = await compress(new Uint8Array(data), { format: task.format, quality: task.quality })
     const view = result.data
     const buffer = (view.buffer as ArrayBuffer).slice(view.byteOffset, view.byteOffset + view.byteLength)
     port.postMessage({ id: task.id, ok: true, format: result.format, before: data.length, data: buffer }, [buffer])

@@ -11,14 +11,14 @@ import * as imagequant from 'imagequant/imagequant_bg.js'
 
 import type { ImageFormat, RawImage } from './types'
 
-// 第一版固定使用以下各档位参数：
-// PNG  -> 高画质 h：imagequant(maxColors=200) + oxipng(level=2)
-// JPEG -> 中画质 m：mozjpeg(quality=75)
-// WebP -> 高画质 h：libwebp(quality=90, method=6, lossless=0)
-export const PRESETS = {
-  png: { maxColors: 200, oxipngLevel: 2 },
-  jpeg: { quality: 75 },
-  webp: { quality: 90, method: 6, lossless: 0 },
+// 默认画质 0–100，仅在调用方未显式传 quality 时按格式回退（即未传 -q 时的取值）。
+// PNG 的 85 经实测标定，使 set_quality(0, 85) 的输出体积最接近旧版 imagequant(maxColors=200)。
+export const DEFAULT_QUALITY: Record<ImageFormat, number> = { png: 85, jpeg: 75, webp: 90 }
+
+// 固定的编码 / 努力度参数，与画质无关，暂不通过 CLI 暴露。
+const ENCODE = {
+  png: { oxipngLevel: 2 },
+  webp: { method: 6, lossless: 0 },
 } as const
 
 const require = createRequire(import.meta.url)
@@ -85,40 +85,41 @@ async function decode(data: Uint8Array, format: ImageFormat): Promise<RawImage> 
   }
 }
 
-async function encodePng(image: RawImage): Promise<Uint8Array> {
-  // imagequant 量化（≤200 色，自带抖动）后直接得到 PNG，再交给 oxipng 做无损优化。
+async function encodePng(image: RawImage, quality: number): Promise<Uint8Array> {
+  // imagequant 量化（set_quality 0–100，roughly like JPEG，自带抖动）后得到 PNG，再交给 oxipng 做无损优化。
   await ensureImagequant()
   const source = imagequant.Imagequant.new_image(toUint8(image.data), image.width, image.height, 0)
   const quantizer = new imagequant.Imagequant()
-  quantizer.set_max_colors(PRESETS.png.maxColors)
+  quantizer.set_quality(0, quality) // minimum=0：永不因达不到目标画质而中止
   const quantized = quantizer.process(source)
 
   oxipngReady ??= initOxipng(await wasmBytes('@jsquash/oxipng/codec/pkg/squoosh_oxipng_bg.wasm'))
   await oxipngReady
-  const optimised = await oxipngOptimise(asBuffer(quantized), { level: PRESETS.png.oxipngLevel, interlace: false })
+  const optimised = await oxipngOptimise(asBuffer(quantized), { level: ENCODE.png.oxipngLevel, interlace: false })
   return new Uint8Array(optimised)
 }
 
-async function encodeJpeg(image: RawImage): Promise<Uint8Array> {
+async function encodeJpeg(image: RawImage, quality: number): Promise<Uint8Array> {
   jpegEncodeReady ??= initJpegEncode(await wasmModule('@jsquash/jpeg/codec/enc/mozjpeg_enc.wasm'))
   await jpegEncodeReady
-  return new Uint8Array(await jpegEncode(asImageData(image), { quality: PRESETS.jpeg.quality }))
+  return new Uint8Array(await jpegEncode(asImageData(image), { quality }))
 }
 
-async function encodeWebp(image: RawImage): Promise<Uint8Array> {
+async function encodeWebp(image: RawImage, quality: number): Promise<Uint8Array> {
   webpEncodeReady ??= initWebpEncode(await wasmModule('@jsquash/webp/codec/enc/webp_enc_simd.wasm'))
   await webpEncodeReady
-  return new Uint8Array(await webpEncode(asImageData(image), { ...PRESETS.webp }))
+  return new Uint8Array(await webpEncode(asImageData(image), { quality, ...ENCODE.webp }))
 }
 
-export async function encode(image: RawImage, format: ImageFormat): Promise<Uint8Array> {
+export async function encode(image: RawImage, format: ImageFormat, quality?: number): Promise<Uint8Array> {
+  const q = quality ?? DEFAULT_QUALITY[format]
   switch (format) {
     case 'png':
-      return encodePng(image)
+      return encodePng(image, q)
     case 'jpeg':
-      return encodeJpeg(image)
+      return encodeJpeg(image, q)
     case 'webp':
-      return encodeWebp(image)
+      return encodeWebp(image, q)
   }
 }
 

@@ -52,33 +52,34 @@ function detectLang(): Lang {
 export const lang: Lang = detectLang()
 
 const en = {
-  help: `{{name}} v{{version}} — compress PNG / JPEG / WebP images
+  help: `{{name}} v{{version}} — compress and convert PNG / JPEG / WebP images
 
 Usage:
   npx {{name}} <files or directories...> [options]
 
 Options:
   -o, --out <filename>   output filename for the input right before it (repeatable)
-  -d, --out-dir <dir>    output directory (default: {{dir}}/ in the current directory)
-  -f, --format <format>  output format: png | jpeg | webp; repeatable to emit several at once (default: same as input)
+  -d, --out-dir <dir>    output directory (default: {{dir}}/; use . for the current directory)
+  -f, --format <format>  output format: png / jpeg (jpg) / webp; repeatable to emit several at once (default: same as input)
+  -q, --quality <0-100>  output quality for every format (default: PNG 85, JPEG 75, WebP 90)
   -r, --recursive        recurse into subdirectories for directory inputs
   -h, --help             show help
   -v, --version          show version
 
-Details:
-  Directory inputs are scanned at the top level for PNG / JPEG / WebP; pass -r to recurse. Multiple files run in parallel.
-  Inputs without -o keep their original name in the output directory; existing files are never overwritten (falls back to "name (n)").
-  With -f every output is converted to that format; -o only sets the filename, not the format.
-  Compression: PNG high (quantize ≤200 colors + oxipng), JPEG medium (mozjpeg 75), WebP high (libwebp 90).
-
 Examples:
-  npx {{name}} a.png b.jpg                  # compress into {{dir}}/a.png, {{dir}}/b.jpg
-  npx {{name}} photos/ -f webp              # recursively compress photos/ and convert all to webp
-  npx {{name}} a.png -f png -f webp         # emit both a.png and a.webp at once
-  npx {{name}} a.png -o x.png b.png -o y.png # set output filenames individually
-  npx {{name}} imgs/ -d dist/               # write outputs to dist/`,
+  npx {{name}} a.png b.jpg c.webp           # keep original format → {{dir}}/a.png, b.jpg, c.webp
+  npx {{name}} photos/ -r                   # recurse into subfolders
+  npx {{name}} photos/ -f webp -d dist/     # convert a folder to webp into dist/
+  npx {{name}} a.png -o pic -f png -f webp  # emit several formats → {{dir}}/pic.png, pic.webp
+  npx {{name}} a.png -q 60                  # set quality (0–100)
+  npx {{name}} a.png -o x.png b.png -o y.png # per-file output names
+
+Behavior:
+  Directories are scanned at the top level only; pass -r to recurse.
+  With -f, -o sets only the base name — the extension follows the format.`,
   argError: 'Argument error: {{message}}',
   unsupportedFormat: 'Error: unsupported format "{{format}}", choose png / jpeg / webp',
+  invalidQuality: 'Error: invalid quality "{{value}}", expected a number (0–100)',
   outMustFollowInput: 'Error: -o must follow an input file',
   dirNoOut: 'Error: directory input {{input}} cannot take a single output name via -o',
   noImages: 'No images found to compress',
@@ -89,33 +90,34 @@ Examples:
 }
 
 const zh: typeof en = {
-  help: `{{name}} v{{version}} — 压缩 PNG / JPEG / WebP 图片
+  help: `{{name}} v{{version}} — 压缩并转换 PNG / JPEG / WebP 图片
 
 用法:
   npx {{name}} <文件或目录...> [选项]
 
 选项:
   -o, --out <文件名>     为紧邻的前一个输入单独指定输出文件名（可多次）
-  -d, --out-dir <目录>   全局输出目录（默认：当前目录下的 {{dir}}/）
-  -f, --format <格式>    输出格式 png | jpeg | webp，可重复指定一次导出多种（默认与输入一致）
+  -d, --out-dir <目录>   输出目录（默认：当前目录下的 {{dir}}/，用 . 表示当前目录）
+  -f, --format <格式>    输出格式 png / jpeg (jpg) / webp，可重复指定一次导出多种（默认与输入一致）
+  -q, --quality <0-100>  所有格式的输出画质（默认：PNG 85、JPEG 75、WebP 90）
   -r, --recursive        目录输入时递归子目录
   -h, --help             显示帮助
   -v, --version          显示版本
 
-说明:
-  传入目录时只压缩顶层的 PNG / JPEG / WebP，加 -r 才递归子目录；多文件时自动多线程并行。
-  未用 -o 单独命名的，按原文件名输出到输出目录；同名不覆盖，自动改用「名称 (n)」。
-  指定 -f 后所有输出都转为该格式；-o 只决定文件名，不影响格式。
-  压缩参数：PNG 高画质（量化 ≤200 色 + oxipng）、JPEG 中画质（mozjpeg 75）、WebP 高画质（libwebp 90）。
-
 示例:
-  npx {{name}} a.png b.jpg                  # 压缩到 {{dir}}/a.png、{{dir}}/b.jpg
-  npx {{name}} photos/ -f webp              # 递归压缩 photos/ 并全部转 webp
-  npx {{name}} a.png -f png -f webp         # 同时导出 a.png 和 a.webp
+  npx {{name}} a.png b.jpg c.webp           # 保持原格式 → {{dir}}/a.png、b.jpg、c.webp
+  npx {{name}} photos/ -r                   # 递归压缩子目录
+  npx {{name}} photos/ -f webp -d dist/     # 把目录转 webp 输出到 dist/
+  npx {{name}} a.png -o pic -f png -f webp  # 一次导出 pic.png 和 pic.webp
+  npx {{name}} a.png -q 60                  # 以画质 60 压缩（0–100）
   npx {{name}} a.png -o x.png b.png -o y.png # 分别指定输出文件名
-  npx {{name}} imgs/ -d dist/               # 输出到 dist/`,
+
+说明:
+  目录输入只压缩顶层，加 -r 才递归子目录。
+  指定 -f 时，-o 只决定基础文件名，扩展名跟随格式。`,
   argError: '参数错误：{{message}}',
   unsupportedFormat: '错误：不支持的格式「{{format}}」，可选 png / jpeg / webp',
+  invalidQuality: '错误：无效的画质「{{value}}」，应为数字（0–100）',
   outMustFollowInput: '错误：-o 必须跟在某个输入文件之后',
   dirNoOut: '错误：目录输入 {{input}} 不能用 -o 指定单个输出文件名',
   noImages: '没有找到可压缩的图片',
